@@ -91,26 +91,29 @@ category_dict = {item['id']: item['name'] for item in annotation['categories']}
 from object_detection.utils import dataset_util
 
 def create_tf_example(image_dir, example):
-  # TODO(user): Populate the following variables from your example.
-  height = 747 # Image height
-  width = 1024 # Image width
-  filename = f"{example['image_id']}.jpg" # Filename of the image. Empty if image is not from file
+  height, width, annotations = example
+  filename = f"{annotations[0]['image_id']}.jpg" # Filename of the image. Empty if image is not from file
   with open(image_dir+'/'+filename,'rb') as f:
     encoded_image_data = f.read() # Encoded image bytes
   image_format = b'jpeg' # b'jpeg' or b'png'
 
-  xmins = [(example["bbox"][0])/width/2] # List of normalized left x coordinates in bounding box (1 per box)
-  xmaxs = [(example["bbox"][0] + example["bbox"][2])/width/2] # List of normalized right x coordinates in bounding box
+  xmins = [(annotation["bbox"][0])/width/2 for annotation in annotations if "bbox" in annotation] # List of normalized left x coordinates in bounding box (1 per box)
+  xmaxs = [(annotation["bbox"][0] + annotation["bbox"][2])/width/2 for annotation in annotations if "bbox" in annotation] # List of normalized right x coordinates in bounding box
              # (1 per box)
-  ymins = [(example["bbox"][1])/height/2] # List of normalized top y coordinates in bounding box (1 per box)
-  ymaxs = [(example["bbox"][1] + example["bbox"][3])/height/2] # List of normalized bottom y coordinates in bounding box
+  ymins = [(annotation["bbox"][1])/height/2 for annotation in annotations if "bbox" in annotation] # List of normalized top y coordinates in bounding box (1 per box)
+  ymaxs = [(annotation["bbox"][1] + annotation["bbox"][3])/height/2 for annotation in annotations if "bbox" in annotation] # List of normalized bottom y coordinates in bounding box
              # (1 per box)
-  classes_text = [category_dict[example["category_id"]].encode('utf-8')] # List of string class name of bounding box (1 per box)
-  classes = [example["category_id"]] # List of integer class id of bounding box (1 per box)
+  xmins = [a if 0 <= a <= 1 else 1 if a > 1 else 0 for a in xmins]
+  xmaxs = [a if 0 <= a <= 1 else 1 if a > 1 else 0 for a in xmaxs]
+  ymins = [a if 0 <= a <= 1 else 1 if a > 1 else 0 for a in ymins]
+  ymaxs = [a if 0 <= a <= 1 else 1 if a > 1 else 0 for a in ymaxs]
+
+  classes_text = [category_dict[annotation["category_id"]].encode('utf-8') for annotation in annotations] # List of string class name of bounding box (1 per box)
+  classes = [annotation["category_id"] for annotation in annotations] # List of integer class id of bounding box (1 per box)
 
   tf_example = tf.train.Example(features=tf.train.Features(feature={
-      'image/height': dataset_util.int64_feature(height),
-      'image/width': dataset_util.int64_feature(width),
+      'image/height': dataset_util.int64_feature(int(height)),
+      'image/width': dataset_util.int64_feature(int(width)),
       'image/filename': dataset_util.bytes_feature(filename.encode('utf-8')),
       'image/source_id': dataset_util.bytes_feature(filename.encode('utf-8')),
       'image/encoded': dataset_util.bytes_feature(encoded_image_data),
@@ -129,16 +132,18 @@ def generate_tf_records(annotations_path, output_filebase, image_dir = r'Z:/Sour
   import contextlib2
   from object_detection.dataset_tools import tf_record_creation_util
   with open(annotations_path) as f:
-    annotation = json.load(f)
+    annotation_file = json.load(f)
 
-  num_samples = len(annotation['annotations'])
+  num_samples = len(annotation_file['annotations'])
+  annotation_dict = {image["id"]: (image["height"]/2, image["width"]/2, []) for image in annotation_file['images']} # key: image_id, value: height, width, list of annotation
+  for annotation in annotation_file['annotations']:
+    annotation_dict[annotation['image_id']][2].append(annotation)
   num_shards = (num_samples // 4096) + (1 if num_samples % 4096 else 0 )
 
   with contextlib2.ExitStack() as tf_record_close_stack:
     output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
         tf_record_close_stack, output_filebase, num_shards)
-    for index, example in enumerate(x for x in annotation['annotations'] if 'bbox' in x):
-      tf_example = create_tf_example(image_dir, example)
+    for index, tf_example in enumerate(tf_example for tf_example in (create_tf_example(image_dir, example) for example in annotation_dict.values()) if tf_example is not None):
       output_shard_index = index % num_shards
       output_tfrecords[output_shard_index].write(tf_example.SerializeToString())
 
