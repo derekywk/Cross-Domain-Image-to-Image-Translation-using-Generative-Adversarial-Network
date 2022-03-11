@@ -99,20 +99,20 @@ def create_tf_example(image_dir, example):
     encoded_image_data = f.read() # Encoded image bytes
   image_format = b'jpeg' # b'jpeg' or b'png'
 
-  xmins = [example["bbox"][0]] # List of normalized left x coordinates in bounding box (1 per box)
-  xmaxs = [example["bbox"][0] + example["bbox"][2]] # List of normalized right x coordinates in bounding box
+  xmins = [(example["bbox"][0])/width/2] # List of normalized left x coordinates in bounding box (1 per box)
+  xmaxs = [(example["bbox"][0] + example["bbox"][2])/width/2] # List of normalized right x coordinates in bounding box
              # (1 per box)
-  ymins = [example["bbox"][1]] # List of normalized top y coordinates in bounding box (1 per box)
-  ymaxs = [example["bbox"][1] + example["bbox"][3]] # List of normalized bottom y coordinates in bounding box
+  ymins = [(example["bbox"][1])/height/2] # List of normalized top y coordinates in bounding box (1 per box)
+  ymaxs = [(example["bbox"][1] + example["bbox"][3])/height/2] # List of normalized bottom y coordinates in bounding box
              # (1 per box)
-  classes_text = [category_dict[example["category_id"]].encode()] # List of string class name of bounding box (1 per box)
+  classes_text = [category_dict[example["category_id"]].encode('utf-8')] # List of string class name of bounding box (1 per box)
   classes = [example["category_id"]] # List of integer class id of bounding box (1 per box)
 
   tf_example = tf.train.Example(features=tf.train.Features(feature={
       'image/height': dataset_util.int64_feature(height),
       'image/width': dataset_util.int64_feature(width),
-      'image/filename': dataset_util.bytes_feature(filename.encode()),
-      'image/source_id': dataset_util.bytes_feature(filename.encode()),
+      'image/filename': dataset_util.bytes_feature(filename.encode('utf-8')),
+      'image/source_id': dataset_util.bytes_feature(filename.encode('utf-8')),
       'image/encoded': dataset_util.bytes_feature(encoded_image_data),
       'image/format': dataset_util.bytes_feature(image_format),
       'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
@@ -128,14 +128,12 @@ def create_tf_example(image_dir, example):
 def generate_tf_records(annotations_path, output_filebase, image_dir = r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_all_images_sm'):
   import contextlib2
   from object_detection.dataset_tools import tf_record_creation_util
-  #from progress.bar import IncrementalBar
   with open(annotations_path) as f:
     annotation = json.load(f)
 
   num_samples = len(annotation['annotations'])
   num_shards = (num_samples // 4096) + (1 if num_samples % 4096 else 0 )
-    
-  #bar = IncrementalBar('Progress', max = num_samples)
+
   with contextlib2.ExitStack() as tf_record_close_stack:
     output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
         tf_record_close_stack, output_filebase, num_shards)
@@ -143,10 +141,12 @@ def generate_tf_records(annotations_path, output_filebase, image_dir = r'Z:/Sour
       tf_example = create_tf_example(image_dir, example)
       output_shard_index = index % num_shards
       output_tfrecords[output_shard_index].write(tf_example.SerializeToString())
-      #bar.next()
-    #bar.finish()
 
+generate_tf_records(train_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/train_dataset.record')
 generate_tf_records(cis_val_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/cis_val_dataset.record')
+generate_tf_records(cis_test_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/cis_test_dataset.record')
+generate_tf_records(trans_val_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/trans_val_dataset.record')
+generate_tf_records(trans_test_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/trans_test_dataset.record')
 
 """# Tensorflow Object Detection API Training"""
 
