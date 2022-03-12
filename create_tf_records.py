@@ -168,4 +168,4 @@ generate_tf_records(trans_test_annotations_path, output_filebase=r'Z:/Source/Wiz
 #  --model_dir=/content/model /
 #  --alsologtostderr
 
-# python models/research/object_detection/model_main_tf2.py --pipeline_config_path=pipeline_v2_local.config --model_dir=training--alsologtostderr
+# python models/research/object_detection/model_main_tf2.py --pipeline_config_path=pipeline_v2_local.config --model_dir=training --alsologtostderr
