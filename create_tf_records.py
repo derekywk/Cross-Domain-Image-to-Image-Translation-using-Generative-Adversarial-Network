@@ -29,6 +29,9 @@ cis_test_annotations_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/projec
 cis_val_annotations_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/cis_val_annotations.json"
 trans_test_annotations_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/trans_test_annotations.json"
 trans_val_annotations_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/trans_val_annotations.json"
+train_annotations_path_remap = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/train_annotations_remap.json"
+cis_test_annotations_path_remap = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/cis_test_annotations_remap.json"
+cis_val_annotations_path_remap = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/cis_val_annotations_remap.json"
 
 """# Dataset Preparation"""
 
@@ -86,11 +89,9 @@ def print_dataset_stats(data_set_generator):
 with open(train_annotations_path) as f:
   annotation = json.load(f)
 
-category_dict = {item['id']: item['name'] for item in annotation['categories']}
-
 from object_detection.utils import dataset_util
 
-def create_tf_example(image_dir, example):
+def create_tf_example(image_dir, example, category_dict, class_counter, class_id_counter):
   height, width, annotations = example
   filename = f"{annotations[0]['image_id']}.jpg" # Filename of the image. Empty if image is not from file
   with open(image_dir+'/'+filename,'rb') as f:
@@ -110,7 +111,9 @@ def create_tf_example(image_dir, example):
 
   classes_text = [category_dict[annotation["category_id"]].encode('utf-8') for annotation in annotations] # List of string class name of bounding box (1 per box)
   classes = [annotation["category_id"] for annotation in annotations] # List of integer class id of bounding box (1 per box)
-
+  for annotation in annotations:
+    class_id_counter.update([annotation["category_id"]])
+    class_counter.update([category_dict[annotation["category_id"]]])
   tf_example = tf.train.Example(features=tf.train.Features(feature={
       'image/height': dataset_util.int64_feature(int(height)),
       'image/width': dataset_util.int64_feature(int(width)),
@@ -140,18 +143,31 @@ def generate_tf_records(annotations_path, output_filebase, image_dir = r'Z:/Sour
     annotation_dict[annotation['image_id']][2].append(annotation)
   num_shards = (num_samples // 4096) + (1 if num_samples % 4096 else 0 )
 
+  class_counter = Counter()
+  class_id_counter = Counter()
+  category_dict = {item['id']: item['name'] for item in annotation_file['categories']}
   with contextlib2.ExitStack() as tf_record_close_stack:
     output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
-        tf_record_close_stack, output_filebase, num_shards)
-    for index, tf_example in enumerate(tf_example for tf_example in (create_tf_example(image_dir, example) for example in annotation_dict.values()) if tf_example is not None):
+        tf_record_close_stack, output_filebase, num_shards
+    )
+    for index, tf_example in enumerate(tf_example for tf_example in (
+            create_tf_example(image_dir, example, category_dict, class_counter, class_id_counter) for example in annotation_dict.values()
+    ) if tf_example is not None):
       output_shard_index = index % num_shards
       output_tfrecords[output_shard_index].write(tf_example.SerializeToString())
+  print(class_counter)
+  print(class_id_counter)
 
-generate_tf_records(train_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/train_dataset.record')
-generate_tf_records(cis_val_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/cis_val_dataset.record')
-generate_tf_records(cis_test_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/cis_test_dataset.record')
-generate_tf_records(trans_val_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/trans_val_dataset.record')
-generate_tf_records(trans_test_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/trans_test_dataset.record')
+print('Train:')
+generate_tf_records(train_annotations_path_remap, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords_remap/train_dataset.record')
+print('Cis Val:')
+generate_tf_records(cis_val_annotations_path_remap, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords_remap/cis_val_dataset.record')
+print('Cis Test:')
+generate_tf_records(cis_test_annotations_path_remap, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords_remap/cis_test_dataset.record')
+# print('Trans val:')
+# generate_tf_records(trans_val_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/trans_val_dataset.record')
+# print('Trans Test:')
+# generate_tf_records(trans_test_annotations_path, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords/trans_test_dataset.record')
 
 """# Tensorflow Object Detection API Training"""
 
