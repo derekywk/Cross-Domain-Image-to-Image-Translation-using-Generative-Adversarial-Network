@@ -87,7 +87,7 @@ def main(unused_argv):
         sample_1_of_n_eval_on_train_examples=(
             FLAGS.sample_1_of_n_eval_on_train_examples),
         checkpoint_dir=FLAGS.checkpoint_dir,
-        wait_interval=300, timeout=FLAGS.eval_timeout)
+        wait_interval=30, timeout=FLAGS.eval_timeout)
   else:
     if FLAGS.use_tpu:
       # TPU is automatically inferred if tpu_name is None and
@@ -110,7 +110,7 @@ def main(unused_argv):
           use_tpu=FLAGS.use_tpu,
           checkpoint_every_n=FLAGS.checkpoint_every_n,
           record_summaries=FLAGS.record_summaries,
-          checkpoint_max_to_keep=50)
+          checkpoint_max_to_keep=None)
 
 if __name__ == '__main__':
   tf.compat.v1.app.run()

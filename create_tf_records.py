@@ -184,4 +184,4 @@ generate_tf_records(cis_test_annotations_path_remap, output_filebase=r'Z:/Source
 #  --model_dir=/content/model /
 #  --alsologtostderr
 
-# python models/research/object_detection/model_main_tf2.py --pipeline_config_path=pipeline_v2_local.config --model_dir=training --alsologtostderr
+# python ../model_main_tf2.py --pipeline_config_path=pipeline.config --model_dir=./ --alsologtostderr
