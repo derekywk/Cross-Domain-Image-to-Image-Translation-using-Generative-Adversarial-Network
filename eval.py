@@ -1,10 +1,12 @@
 from object_detection import model_lib_v2
 import os
 
-def eval(start, end, step_size=1, directory='.'):
-    os.rename(f'{directory}/checkpoint', f'{directory}/checkpoint_temp')
+def eval(start, end, step_size=1, directory='.', has_checkpoint=True, reverse=True):
+    if has_checkpoint:
+        os.rename(f'{directory}/checkpoint', f'{directory}/checkpoint_temp')
     steps = list(range(start, end+1, step_size))
     if end not in steps: steps.append(end)
+    steps.reverse()
     try:
         for step in steps:
             with open(f"{directory}/checkpoint", "w") as f:
@@ -18,8 +20,9 @@ def eval(start, end, step_size=1, directory='.'):
         try:
             os.remove(f"{directory}/checkpoint")
         except: pass
-    os.rename(f'{directory}/checkpoint_temp', f'{directory}/checkpoint')
+    if has_checkpoint:
+        os.rename(f'{directory}/checkpoint_temp', f'{directory}/checkpoint')
 
 
 if __name__ == '__main__':
-    eval(start=1, end=61, step_size=3, directory='./Baseline')
+    eval(start=1, end=61, step_size=3, directory='./Augmentation_Cropping_075', has_checkpoint=True, reverse=True)
