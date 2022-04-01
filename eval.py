@@ -6,7 +6,6 @@ def eval(start, end, step_size=1, directory='.', has_checkpoint=True, reverse=Tr
         os.rename(f'{directory}/checkpoint', f'{directory}/checkpoint_temp')
     steps = list(range(start, end+1, step_size))
     if end not in steps: steps.append(end)
-    steps.reverse()
     try:
         for step in steps:
             with open(f"{directory}/checkpoint", "w") as f:
@@ -25,4 +24,15 @@ def eval(start, end, step_size=1, directory='.', has_checkpoint=True, reverse=Tr
 
 
 if __name__ == '__main__':
-    eval(start=1, end=61, step_size=3, directory='./Augmentation_Cropping_075', has_checkpoint=True, reverse=True)
+    try:
+        eval(start=1, end=61, step_size=3, directory='./L2', has_checkpoint=True, reverse=False)
+    except:
+        pass
+    try:
+        eval(start=1, end=61, step_size=3, directory='./Augmentation_Cropping_with_L2', has_checkpoint=True, reverse=False)
+    except:
+        pass
+    try:
+        eval(start=1, end=61, step_size=3, directory='./Augmentation_All', has_checkpoint=True, reverse=False)
+    except:
+        pass

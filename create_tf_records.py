@@ -14,7 +14,7 @@ import cv2
 import itertools
 import sys
 from collections import Counter
-sys.path.append(r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/models/research")
+sys.path.append(r"./models/research")
 
 print(tf.__version__)
 print(tf.config.list_physical_devices())
@@ -23,17 +23,17 @@ print(tf.config.list_physical_devices())
 batch_size = 32
 img_height = 747
 img_width = 1024
-data_directory_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_all_images_sm"
-train_annotations_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/train_annotations.json"
-cis_test_annotations_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/cis_test_annotations.json"
-cis_val_annotations_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/cis_val_annotations.json"
-trans_test_annotations_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/trans_test_annotations.json"
-trans_val_annotations_path = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/trans_val_annotations.json"
-train_annotations_path_remap = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/train_annotations_remap.json"
-cis_test_annotations_path_remap = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/cis_test_annotations_remap.json"
-cis_val_annotations_path_remap = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/cis_val_annotations_remap.json"
-trans_test_annotations_path_remap = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/trans_test_annotations_remap.json"
-trans_val_annotations_path_remap = r"Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_annotation_files/trans_val_annotations_remap.json"
+data_directory_path = r"./data/eccv_18_all_images_sm"
+train_annotations_path = r"./data/eccv_18_annotation_files/train_annotations.json"
+cis_test_annotations_path = r"./data/eccv_18_annotation_files/cis_test_annotations.json"
+cis_val_annotations_path = r"./data/eccv_18_annotation_files/cis_val_annotations.json"
+trans_test_annotations_path = r"./data/eccv_18_annotation_files/trans_test_annotations.json"
+trans_val_annotations_path = r"./data/eccv_18_annotation_files/trans_val_annotations.json"
+train_annotations_path_remap = r"./data/eccv_18_annotation_files/train_annotations_remap.json"
+cis_test_annotations_path_remap = r"./data/eccv_18_annotation_files/cis_test_annotations_remap.json"
+cis_val_annotations_path_remap = r"./data/eccv_18_annotation_files/cis_val_annotations_remap.json"
+trans_test_annotations_path_remap = r"./data/eccv_18_annotation_files/trans_test_annotations_remap.json"
+trans_val_annotations_path_remap = r"./data/eccv_18_annotation_files/trans_val_annotations_remap.json"
 
 """# Dataset Preparation"""
 
@@ -133,7 +133,7 @@ def create_tf_example(image_dir, example, category_dict, class_counter, class_id
   return tf_example
 
 
-def generate_tf_records(annotations_path, output_filebase, image_dir = r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/data/eccv_18_all_images_sm'):
+def generate_tf_records(annotations_path, output_filebase, image_dir = r'./data/eccv_18_all_images_sm'):
   import contextlib2
   from object_detection.dataset_tools import tf_record_creation_util
   with open(annotations_path) as f:
@@ -160,16 +160,16 @@ def generate_tf_records(annotations_path, output_filebase, image_dir = r'Z:/Sour
   print(class_counter)
   print(class_id_counter)
 
-# print('Train:')
-# generate_tf_records(train_annotations_path_remap, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords_remap/train_dataset.record')
-# print('Cis Val:')
-# generate_tf_records(cis_val_annotations_path_remap, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords_remap/cis_val_dataset.record')
-# print('Cis Test:')
-# generate_tf_records(cis_test_annotations_path_remap, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords_remap/cis_test_dataset.record')
+print('Train:')
+generate_tf_records(train_annotations_path_remap, output_filebase=r'./tfrecords_remap/train_dataset.record')
+print('Cis Val:')
+generate_tf_records(cis_val_annotations_path_remap, output_filebase=r'./tfrecords_remap/cis_val_dataset.record')
+print('Cis Test:')
+generate_tf_records(cis_test_annotations_path_remap, output_filebase=r'./tfrecords_remap/cis_test_dataset.record')
 print('Trans val:')
-generate_tf_records(trans_val_annotations_path_remap, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords_remap/trans_val_dataset.record')
+generate_tf_records(trans_val_annotations_path_remap, output_filebase=r'./tfrecords_remap/trans_val_dataset.record')
 print('Trans Test:')
-generate_tf_records(trans_test_annotations_path_remap, output_filebase=r'Z:/Source/Wizpresso Personal/Derek Yuen/mlp/project/tfrecords_remap/trans_test_dataset.record')
+generate_tf_records(trans_test_annotations_path_remap, output_filebase=r'./tfrecords_remap/trans_test_dataset.record')
 
 """# Tensorflow Object Detection API Training"""
 
