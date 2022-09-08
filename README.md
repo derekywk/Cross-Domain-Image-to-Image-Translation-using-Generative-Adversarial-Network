@@ -1,5 +1,9 @@
-# mlpg037
-# to install the environment, use the following commands
+# Cross-Domain Image-to-Image Translation using Generative Adversarial Network 
+## The University of Edinburgh - Machine Learning Practical Project
+## Group G037
+## Awarded *The 2022 IBM Shortlist Prize for the Best Project in Machine Learning Practical*
+
+# To install the environment, use the following commands
 
 cd models/research
 
